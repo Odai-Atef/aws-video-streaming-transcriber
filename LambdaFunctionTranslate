@@ -1,0 +1,31 @@
+ const AWS = require('aws-sdk');
+        const translate = new AWS.Translate();
+        const result_bucket_name="asdasdasdasdqwd";
+        const from = "en";
+        const to = "ar";
+        const s3bucket = new AWS.S3({params: {Bucket: result_bucket_name}});
+        exports.handler = (event) => {
+            var text = "Hi Amy! Your mum sent me a text. You forgot your inhaler. Why don’t you turn your phone on?” Amy didn’t like technology. She never sent text messages and she hated Facebook too.";
+            var params = {
+                Text: text,
+                SourceLanguageCode: from,
+                TargetLanguageCode: to
+            };
+            translate.translateText(params, function (err, data) {
+                if (data) {
+                    var file_data = {
+                        Key: 'translated',
+                        Body: JSON.stringify(data)
+                    };
+                    console.log(file_data)
+                    s3bucket.upload(file_data, function (err, data) {
+
+                        if (err) {
+                            console.log('ERROR MSG: ', err);
+                        } else {
+                            console.log('Successfully uploaded data');
+                        }
+                    });
+                }
+            });
+        };
