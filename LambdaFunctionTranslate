@@ -1,11 +1,18 @@
  const AWS = require('aws-sdk');
         const translate = new AWS.Translate();
-        const result_bucket_name="asdasdasdasdqwd";
+        const result_bucket_name="translatedenglishvideos2019";
         const from = "en";
         const to = "ar";
         const s3bucket = new AWS.S3({params: {Bucket: result_bucket_name}});
+        const s3 = new AWS.S3();
         exports.handler = (event) => {
-            var text = "Hi Amy! Your mum sent me a text. You forgot your inhaler. Why don’t you turn your phone on?” Amy didn’t like technology. She never sent text messages and she hated Facebook too.";
+            var getParams = {
+                    Bucket: event.Records[0].s3.bucket.name, //replace example bucket with your s3 bucket name
+                    Key:event.Records[0].s3.object.key // replace file location with your s3 file location
+                    };
+            s3.getObject(getParams, function (err, textData) {
+            var res=JSON.parse(textData.Body.toString());
+            var text =res.results.transcripts[0].transcript;
             var params = {
                 Text: text,
                 SourceLanguageCode: from,
@@ -14,10 +21,9 @@
             translate.translateText(params, function (err, data) {
                 if (data) {
                     var file_data = {
-                        Key: 'translated',
+                        Key: getParams.Key,
                         Body: JSON.stringify(data)
                     };
-                    console.log(file_data)
                     s3bucket.upload(file_data, function (err, data) {
 
                         if (err) {
@@ -28,4 +34,5 @@
                     });
                 }
             });
-        };
+        });
+    };
